@@ -1,0 +1,180 @@
+use crate::Result;
+use crate::Scope;
+use crate::Token;
+
+use alloc::vec::Vec;
+use core::iter::Peekable;
+use la_term::Strictness;
+use la_term::Term;
+
+/// Stream of tokens generated from text.
+pub type Lexer<'a> = Peekable<logos::Lexer<'a, Token>>;
+
+////////////////////////////////////////////////////////////////////////////////
+// Terms
+
+/// Parse a term from a token stream.
+pub fn parse_term(scope: &Scope, lex: &mut Lexer) -> Result<Term>
+{
+    parse_term_2(scope, lex)
+}
+
+fn parse_term_2(scope: &Scope, lex: &mut Lexer) -> Result<Term>
+{
+    let mut term = parse_term_1(scope, lex)?;
+    while let Some(arguments) = parse_argument_list(scope, lex)? {
+        term = Term::application(term, &arguments);
+    }
+    Ok(term)
+}
+
+fn parse_term_1(scope: &Scope, lex: &mut Lexer) -> Result<Term>
+{
+    match lex.next() {
+
+        Some(Token::Pipe) => {
+            let parameters =
+                parse_comma_matches!(lex, Token::Pipe, parse_parameter)?;
+            let body = {
+                let parameters = parameters.iter().map(|(_, n)| n.as_slice());
+                let scope = Scope::new(Some(scope), parameters);
+                parse_term(&scope, lex)?
+            };
+            let term = Term::lambda(parameters, body);
+            Ok(term)
+        },
+
+        Some(Token::LeftParenthesis) => {
+            let term = parse_term(scope, lex)?;
+            parse_exact_matches!(lex, Token::RightParenthesis)?;
+            Ok(term)
+        },
+
+        Some(Token::Integer(big_uint)) =>
+            Ok(Term::integer(big_uint)),
+
+        Some(Token::String(ref bytes)) =>
+            Ok(Term::string(bytes)),
+
+        Some(Token::Identifier(ref bytes)) =>
+            match scope.get(bytes) {
+                Some(de_bruijn) => Ok(Term::variable(de_bruijn)),
+                None => Ok(Term::symbol(bytes)),
+            },
+
+        _ => todo!(),
+
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Components
+
+fn parse_identifier(lex: &mut Lexer) -> Result<Vec<u8>>
+{
+    let token = lex.next();
+    match token {
+        Some(Token::Identifier(name)) => Ok(name),
+        _ => todo!(),
+    }
+}
+
+fn parse_argument_list(scope: &Scope, lex: &mut Lexer)
+    -> Result<Option<Vec<Term>>>
+{
+    if parse_optional_matches!(lex, Token::LeftParenthesis) {
+        let arguments = parse_comma_matches!(
+            lex,
+            Token::RightParenthesis,
+            |lex| parse_term(scope, lex),
+        )?;
+        Ok(Some(arguments))
+    } else {
+        Ok(None)
+    }
+}
+
+fn parse_parameter(lex: &mut Lexer) -> Result<(Strictness, Vec<u8>)>
+{
+    let strictness = parse_strictness(lex);
+    let name = parse_identifier(lex)?;
+    Ok((strictness, name))
+}
+
+fn parse_strictness(lex: &mut Lexer) -> Strictness
+{
+    let tilde = parse_optional_matches!(lex, Token::Tilde);
+    if tilde {
+        Strictness::NonStrict
+    } else {
+        Strictness::Strict
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Combinators
+
+/// If the next token matches the predicate, consume it and return `true`.
+/// Otherwise leave it in the token stream and return `false`.
+fn parse_optional<F>(lex: &mut Lexer, pred: F) -> bool
+    where F: FnOnce(&Token) -> bool
+{
+    lex.next_if(pred).is_some()
+}
+
+/// Read the next token and assert that it matches the predicate.
+fn parse_exact<F>(lex: &mut Lexer, pred: F) -> Result<()>
+    where F: FnOnce(&Token) -> bool
+{
+    let token = lex.next();
+    match token {
+        Some(ref token) if pred(token) => Ok(()),
+        _ => todo!(),
+    }
+}
+
+/// Parse a comma-separated list terminated by the given terminator.
+/// A trailing comma is permitted at the end of the list.
+fn parse_comma<F, G, T>(
+    lex: &mut Lexer,
+    mut is_terminator: F,
+    mut parse_element: G,
+) -> Result<Vec<T>>
+    where F: FnMut(&Token) -> bool
+        , G: FnMut(&mut Lexer) -> Result<T>
+{
+    let mut elements = Vec::new();
+    if parse_optional(lex, &mut is_terminator) {
+        return Ok(elements);
+    }
+    loop {
+        let element = parse_element(lex)?;
+        elements.push(element);
+        if parse_optional_matches!(lex, Token::Comma) {
+            if parse_optional(lex, &mut is_terminator) {
+                break;
+            }
+            continue;
+        }
+        if parse_optional(lex, is_terminator) {
+            break;
+        }
+        todo!();
+    }
+    Ok(elements)
+}
+
+macro parse_optional_matches($lex:expr, $token:pat $(,)?)
+{
+    parse_optional($lex, |token| matches!(token, $token))
+}
+
+macro parse_exact_matches($lex:expr, $token:pat $(,)?)
+{
+    parse_exact($lex, |token| matches!(token, $token))
+}
+
+macro parse_comma_matches($lex:expr, $token:pat, $parse_element:expr $(,)?)
+{
+    parse_comma($lex, |token| matches!(token, $token), $parse_element)
+}

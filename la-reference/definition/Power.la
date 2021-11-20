@@ -1,0 +1,16 @@
+List(
+
+    Name("Power"),
+
+    Syntax("Power(x, y)"),
+    Syntax("x ^ y"),
+    Syntax(SuperscriptMarkup("x", "y")),
+
+    Meaning(
+        "Represents ", Markup("x"), " raised to ",
+        "the power of ", Markup("y"), ".",
+    ),
+
+    Example(SuperscriptMarkup("2", "3")),
+
+)

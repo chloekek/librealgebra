@@ -1,0 +1,13 @@
+List(
+
+    Name("SuperscriptMarkup"),
+
+    Syntax("SuperscriptMarkup(x, y)"),
+
+    Meaning(
+        "Represents a superscript markup ",
+        "where ", Markup("x"), " appears as the base ",
+        "and ", Markup("y"), " appears as the exponent.",
+    ),
+
+)

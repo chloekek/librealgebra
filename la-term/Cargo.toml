@@ -1,0 +1,8 @@
+[package]
+name = "la-term"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies.num-bigint]
+default-features = false
+version = "~0.4.3"

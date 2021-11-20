@@ -1,0 +1,12 @@
+List(
+
+    Name("RowMarkup"),
+
+    Syntax("RowMarkup(...)"),
+
+    Meaning(
+        "Represents a markup where a sequence of tokens ",
+        "are layed out side by side horizontally.",
+    ),
+
+)
