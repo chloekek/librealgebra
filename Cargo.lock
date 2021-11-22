@@ -72,6 +72,7 @@ dependencies = [
 name = "la-term"
 version = "0.0.0"
 dependencies = [
+ "hashbrown",
  "num-bigint",
 ]
 

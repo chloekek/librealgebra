@@ -1,66 +1,83 @@
+use crate::Error;
 use crate::Result;
 use crate::Scope;
 use crate::Token;
 
+use alloc::borrow::Cow;
 use alloc::vec::Vec;
 use core::iter::Peekable;
-use la_term::Strictness;
 use la_term::Term;
+use la_term::lambda::Parameter;
+use la_term::lambda::Strictness;
+use la_term::symbol::Symbols;
 
 /// Stream of tokens generated from text.
-pub type Lexer<'a> = Peekable<logos::Lexer<'a, Token>>;
+pub type Lexer<'a> = Peekable<logos::Lexer<'a, Token<'a>>>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Terms
 
 /// Parse a term from a token stream.
-pub fn parse_term(scope: &Scope, lex: &mut Lexer) -> Result<Term>
+pub fn parse_term(symbols: &Symbols, scope: &Scope, lex: &mut Lexer)
+    -> Result<Term>
 {
-    parse_term_2(scope, lex)
+    parse_term_2(symbols, scope, lex)
 }
 
-fn parse_term_2(scope: &Scope, lex: &mut Lexer) -> Result<Term>
+fn parse_term_2(symbols: &Symbols, scope: &Scope, lex: &mut Lexer)
+    -> Result<Term>
 {
-    let mut term = parse_term_1(scope, lex)?;
-    while let Some(arguments) = parse_argument_list(scope, lex)? {
-        term = Term::application(term, &arguments);
+    let mut term = parse_term_1(symbols, scope, lex)?;
+    while let Some(arguments) = parse_argument_list(symbols, scope, lex)? {
+        term = Term::application(term, arguments)?;
     }
     Ok(term)
 }
 
-fn parse_term_1(scope: &Scope, lex: &mut Lexer) -> Result<Term>
+fn parse_term_1(symbols: &Symbols, scope: &Scope, lex: &mut Lexer)
+    -> Result<Term>
 {
     match lex.next() {
 
         Some(Token::Pipe) => {
-            let parameters =
-                parse_comma_matches!(lex, Token::Pipe, parse_parameter)?;
+            let parameters = parse_comma_matches!(
+                lex,
+                Token::Pipe,
+                |lex| parse_parameter(symbols, lex),
+            )?;
             let body = {
-                let parameters = parameters.iter().map(|(_, n)| n.as_slice());
+                let parameters = parameters.iter().map(|p| p.name.clone());
                 let scope = Scope::new(Some(scope), parameters);
-                parse_term(&scope, lex)?
+                parse_term(symbols, &scope, lex)?
             };
-            let term = Term::lambda(parameters, body);
-            Ok(term)
+            Term::lambda(parameters.into(), body)
+                .map_err(Error::from)
         },
 
         Some(Token::LeftParenthesis) => {
-            let term = parse_term(scope, lex)?;
+            let term = parse_term(symbols, scope, lex)?;
             parse_exact_matches!(lex, Token::RightParenthesis)?;
             Ok(term)
         },
 
-        Some(Token::Integer(big_uint)) =>
-            Ok(Term::integer(big_uint)),
+        Some(Token::Integer(value)) =>
+            Term::integer(value)
+                .map_err(Error::from),
 
-        Some(Token::String(ref bytes)) =>
-            Ok(Term::string(bytes)),
+        Some(Token::String(value)) =>
+            Term::string(value.iter().copied())
+                .map_err(Error::from),
 
-        Some(Token::Identifier(ref bytes)) =>
-            match scope.get(bytes) {
-                Some(de_bruijn) => Ok(Term::variable(de_bruijn)),
-                None => Ok(Term::symbol(bytes)),
-            },
+        Some(Token::Identifier(ref name)) => {
+            let name = symbols.get(name)?;
+            match scope.get(&name) {
+                Some(de_bruijn) =>
+                    Term::variable(de_bruijn)
+                        .map_err(Error::from),
+                None =>
+                    Ok(Term::symbol(name)),
+            }
+        },
 
         _ => todo!(),
 
@@ -70,7 +87,7 @@ fn parse_term_1(scope: &Scope, lex: &mut Lexer) -> Result<Term>
 ////////////////////////////////////////////////////////////////////////////////
 // Components
 
-fn parse_identifier(lex: &mut Lexer) -> Result<Vec<u8>>
+fn parse_identifier<'a>(lex: &mut Lexer<'a>) -> Result<Cow<'a, [u8]>>
 {
     let token = lex.next();
     match token {
@@ -79,14 +96,14 @@ fn parse_identifier(lex: &mut Lexer) -> Result<Vec<u8>>
     }
 }
 
-fn parse_argument_list(scope: &Scope, lex: &mut Lexer)
+fn parse_argument_list(symbols: &Symbols, scope: &Scope, lex: &mut Lexer)
     -> Result<Option<Vec<Term>>>
 {
     if parse_optional_matches!(lex, Token::LeftParenthesis) {
         let arguments = parse_comma_matches!(
             lex,
             Token::RightParenthesis,
-            |lex| parse_term(scope, lex),
+            |lex| parse_term(symbols, scope, lex),
         )?;
         Ok(Some(arguments))
     } else {
@@ -94,11 +111,12 @@ fn parse_argument_list(scope: &Scope, lex: &mut Lexer)
     }
 }
 
-fn parse_parameter(lex: &mut Lexer) -> Result<(Strictness, Vec<u8>)>
+fn parse_parameter(symbols: &Symbols, lex: &mut Lexer) -> Result<Parameter>
 {
     let strictness = parse_strictness(lex);
     let name = parse_identifier(lex)?;
-    Ok((strictness, name))
+    let name = symbols.get(&name)?;
+    Ok(Parameter{strictness, name})
 }
 
 fn parse_strictness(lex: &mut Lexer) -> Strictness

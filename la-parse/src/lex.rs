@@ -1,4 +1,4 @@
-use alloc::vec::Vec;
+use alloc::borrow::Cow;
 use logos::Lexer;
 use logos::Logos;
 use num_bigint::BigUint;
@@ -6,7 +6,7 @@ use num_traits::Num;
 
 /// Token generated during lexing.
 #[derive(Debug, Logos)]
-pub enum Token
+pub enum Token<'a>
 {
     /// Emitted when there is a lexical error.
     #[error]
@@ -39,7 +39,7 @@ pub enum Token
 
     /// String token.
     #[regex(r#""[^"]+""#, lex_string)]
-    String(Vec<u8>),
+    String(Cow<'a, [u8]>),
 
     /// Identifier token.
     ///
@@ -48,23 +48,23 @@ pub enum Token
     ///
     /// [`Scope`]: `crate::Scope`
     #[regex(r"[A-Za-z]+", lex_identifier)]
-    Identifier(Vec<u8>),
+    Identifier(Cow<'a, [u8]>),
 }
 
-fn lex_integer(lex: &mut Lexer<Token>) -> Option<BigUint>
+fn lex_integer<'a>(lex: &mut Lexer<'a, Token<'a>>) -> Option<BigUint>
 {
     BigUint::from_str_radix(lex.slice(), 10).ok()
 }
 
-fn lex_string(lex: &mut Lexer<Token>) -> Vec<u8>
+fn lex_string<'a>(lex: &mut Lexer<'a, Token<'a>>) -> Cow<'a, [u8]>
 {
     let input = lex.slice();
-    input[1 .. input.len() - 1].into()
+    input[1 .. input.len() - 1].as_bytes().into()
 }
 
-fn lex_identifier(lex: &mut Lexer<Token>) -> Vec<u8>
+fn lex_identifier<'a>(lex: &mut Lexer<'a, Token<'a>>) -> Cow<'a, [u8]>
 {
-    lex.slice().into()
+    lex.slice().as_bytes().into()
 }
 
 #[cfg(test)]

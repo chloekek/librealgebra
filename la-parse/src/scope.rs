@@ -1,5 +1,6 @@
 use hashbrown::HashMap;
-use la_term::DeBruijn;
+use la_term::symbol::Symbol;
+use la_term::variable::DeBruijn;
 
 /// Mapping from identifiers to De Bruijn indices.
 ///
@@ -10,7 +11,7 @@ use la_term::DeBruijn;
 pub struct Scope<'a>
 {
     parent: Option<&'a Scope<'a>>,
-    variables: HashMap<&'a [u8], DeBruijn>,
+    variables: HashMap<Symbol, DeBruijn>,
 }
 
 impl<'a> Scope<'a>
@@ -21,7 +22,7 @@ impl<'a> Scope<'a>
     /// The variables are assigned De Bruijn indices starting at zero.
     /// Variables in the parent scope are renumbered on demand by `get`.
     pub fn new<I>(parent: Option<&'a Scope>, variables: I) -> Self
-        where I: IntoIterator<Item=&'a [u8]>
+        where I: IntoIterator<Item=Symbol>
     {
         let variables =
             variables
@@ -38,7 +39,7 @@ impl<'a> Scope<'a>
     /// then this method will return `None`.
     /// This should be interpreted as there not being
     /// a bound variable with that name in scope.
-    pub fn get(mut self: &Self, identifier: &[u8]) -> Option<DeBruijn>
+    pub fn get(mut self: &Self, name: &Symbol) -> Option<DeBruijn>
     {
         // The compiler would not optimize the tail recursive implementation.
         // So we write an iterative version manually (hence mut self).
@@ -48,7 +49,7 @@ impl<'a> Scope<'a>
         let mut shift = 0;
 
         loop {
-            if let Some(&variable) = self.variables.get(identifier) {
+            if let Some(&variable) = self.variables.get(name) {
                 break Some(variable + shift);
             } else if let Some(parent) = self.parent {
                 self = parent;
