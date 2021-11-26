@@ -68,3 +68,21 @@ impl Term
         }
     }
 }
+
+#[cfg(test)]
+mod tests
+{
+    use super::*;
+
+    use proptest::proptest;
+
+    proptest!
+    {
+        #[test]
+        fn integer_i32_eq_integer_i32_roundtrip(value: i32)
+        {
+            let term = Term::integer_i32(value);
+            assert!(term.eq_integer_i32(value));
+        }
+    }
+}
