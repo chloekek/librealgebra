@@ -20,7 +20,7 @@ fn main()
 
     let session = Session::new();
     let symbols = Symbols::new();
-    let builtins = Builtins::new(&symbols).unwrap();
+    let builtins = Builtins::new(&symbols);
     let warner = StderrWarner;
 
     let scope = Scope::new(None, []);

@@ -5,7 +5,6 @@
 //! The first word records the number of bytes in the string.
 //! The remaining words record the bytes.
 
-use crate::AllocError;
 use crate::Header;
 use crate::Kind;
 use crate::Payload;
@@ -51,13 +50,13 @@ fn round_to_words(bytes: usize) -> usize
 impl Term
 {
     /// Create a string term.
-    pub fn string<I, J>(bytes: I) -> Result<Self, AllocError>
+    pub fn string<I, J>(bytes: I) -> Self
         where I: IntoIterator<IntoIter=J>
             , J: Iterator<Item=u8> + ExactSizeIterator + TrustedLen
     {
         let bytes = bytes.into_iter();
         let bytes_words = round_to_words(bytes.len());
-        let payload_words = add(1, bytes_words)?;
+        let payload_words = add(1, bytes_words);
         unsafe {
             Self::new(payload_words, |payload| {
                 let view = UnsafeView::new(payload);

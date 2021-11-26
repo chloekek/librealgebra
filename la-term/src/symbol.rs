@@ -5,7 +5,6 @@
 //! The first word records the number of bytes in the name.
 //! The remaining words record the bytes of the name.
 
-use crate::AllocError;
 use crate::Header;
 use crate::Kind;
 use crate::Payload;
@@ -21,7 +20,7 @@ use core::hash::Hasher;
 use core::mem::size_of;
 use core::ptr::copy;
 use core::slice;
-use hashbrown::HashMap;
+use hashbrown::HashSet;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Symbol terms
@@ -67,10 +66,10 @@ impl Term
     }
 
     /// Create a symbol term.
-    fn symbol_uninterned(name: &[u8]) -> Result<Term, AllocError>
+    fn symbol_uninterned(name: &[u8]) -> Term
     {
         let name_words = round_to_words(name.len());
-        let payload_words = add(1, name_words)?;
+        let payload_words = add(1, name_words);
         unsafe {
             Self::new(payload_words, |payload| {
                 let view = UnsafeView::new(payload);
@@ -183,9 +182,7 @@ impl fmt::Debug for Symbol
 /// Table of interned symbols.
 pub struct Symbols
 {
-    /// The reason we use a map instead of a set
-    /// is explained in the implementation of `get`.
-    symbols: RefCell<HashMap<Entry, ()>>,
+    symbols: RefCell<HashSet<Entry>>,
 }
 
 /// Entry of the table of interned symbols.
@@ -231,29 +228,19 @@ impl Symbols
     /// Create a new table with no symbols.
     pub fn new() -> Self
     {
-        Self{symbols: RefCell::new(HashMap::new())}
+        Self{symbols: RefCell::new(HashSet::new())}
     }
 
     /// Get or create the symbol with the given name.
     ///
     /// When a symbol with the same name was already created,
     /// this method will return that same symbol term.
-    pub fn get(&self, name: &[u8]) -> Result<Symbol, AllocError>
+    pub fn get(&self, name: &[u8]) -> Symbol
     {
-        // The HashSet function does not offer an adequate entry interface.
-        // The `HashSet::get_or_insert_with` method comes close,
-        // but does not admit initializers that return `Result`.
-        use hashbrown::hash_map::RawEntryMut::*;
         let mut symbols = self.symbols.borrow_mut();
-        match symbols.raw_entry_mut().from_key(name) {
-            Occupied(occ) =>
-                Ok(occ.key().inner.clone()),
-            Vacant(vac) => {
-                let symbol_term = Term::symbol_uninterned(name)?;
-                let entry = Entry{inner: Symbol{inner: symbol_term}};
-                let entry = vac.insert(entry, ());
-                Ok(entry.0.inner.clone())
-            },
-        }
+        symbols.get_or_insert_with(name, |name| {
+            let symbol_term = Term::symbol_uninterned(name);
+            Entry{inner: Symbol{inner: symbol_term}}
+        }).inner.clone()
     }
 }

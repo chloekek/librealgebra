@@ -33,25 +33,23 @@ pub mod variable;
 
 mod guard;
 
-/// No memory could be allocated for a term.
-///
-/// This type is zero-sized so that `Result<Term, AllocError>`
-/// uses the niche optimization for non-null pointers.
-#[derive(Debug)]
-pub struct AllocError;
-
-/// Convenience function that adds two integers
-/// and returns [`AllocError`] on overflow.
-fn add(a: usize, b: usize) -> Result<usize, AllocError>
+#[cold]
+#[inline(never)]
+fn panic_layout() -> !
 {
-    a.checked_add(b).ok_or(AllocError)
+    panic!("layout")
 }
 
-/// Convenience function that multiplies two integers
-/// and returns [`AllocError`] on overflow.
-fn mul(a: usize, b: usize) -> Result<usize, AllocError>
+/// Convenience function that adds two integers and panics on overflow.
+fn add(a: usize, b: usize) -> usize
 {
-    a.checked_mul(b).ok_or(AllocError)
+    a.checked_add(b).unwrap_or_else(|| panic_layout())
+}
+
+/// Convenience function that multiplies two integers and panics on overflow.
+fn mul(a: usize, b: usize) -> usize
+{
+    a.checked_mul(b).unwrap_or_else(|| panic_layout())
 }
 
 /// Handle to a term of any type.
@@ -81,12 +79,12 @@ pub enum View<'a>
 impl Term
 {
     /// Compute the layout for a term that has a specified number of words.
-    fn layout(payload_words: usize) -> Result<Layout, AllocError>
+    fn layout(payload_words: usize) -> Layout
     {
-        let payload_size = mul(payload_words, size_of::<usize>())?;
-        let size = add(size_of::<Header>(), payload_size)?;
+        let payload_size = mul(payload_words, size_of::<usize>());
+        let size = add(size_of::<Header>(), payload_size);
         Layout::from_size_align(size, align_of::<Header>())
-            .map_err(|_| AllocError)
+            .unwrap_or_else(|_| panic_layout())
     }
 
     /// Allocate memory for a new term and initialize it.
@@ -101,11 +99,10 @@ impl Term
     ///
     /// The `init` function must initialize the payload and return a header
     /// such that the term can be used safely when this operation is complete.
-    pub unsafe fn new<F>(payload_words: usize, init: F)
-        -> Result<Self, AllocError>
+    pub unsafe fn new<F>(payload_words: usize, init: F) -> Self
         where F: FnOnce(*mut Payload) -> Header
     {
-        let layout = Self::layout(payload_words)?;
+        let layout = Self::layout(payload_words);
         let ptr = alloc(layout) as *mut Object;
         let ptr = NonNull::new(ptr).unwrap_or_else(|| handle_alloc_error(layout));
 
@@ -114,7 +111,7 @@ impl Term
         (*ptr.as_ptr()).header = init(&mut (*ptr.as_ptr()).payload);
         guard.skip(); // ... but not if init returns.
 
-        Ok(Self{ptr})
+        Self{ptr}
     }
 
     /// Access the term as a pointer.

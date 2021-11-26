@@ -4,7 +4,6 @@
 //! which is the value of the integer as an `i32`.
 //! In the future this type should support integers of arbitrary size.
 
-use crate::AllocError;
 use crate::Header;
 use crate::Kind;
 use crate::Payload;
@@ -34,7 +33,7 @@ impl UnsafeView
 impl Term
 {
     /// Create an integer term.
-    pub fn integer_i32(value: i32) -> Result<Self, AllocError>
+    pub fn integer_i32(value: i32) -> Self
     {
         // A word is always at least 32 bits.
         let payload_words = 1;

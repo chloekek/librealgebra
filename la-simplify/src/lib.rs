@@ -98,14 +98,14 @@ pub fn simplify_Sin(c: Context, arguments: &[Term]) -> Option<Term>
     let operand = recurse(c, original_operand.clone());
 
     if operand.eq_symbol(&c.builtins.Pi) {
-        return Some(Term::integer_i32(0).unwrap());
+        return Some(Term::integer_i32(0));
     }
 
     if operand.ptr_eq(&original_operand) {
         None
     } else {
         let Sin = Term::symbol(c.builtins.Sin.clone());
-        Some(Term::application(Sin, [operand]).unwrap())
+        Some(Term::application(Sin, [operand]))
     }
 }
 

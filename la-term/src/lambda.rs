@@ -4,7 +4,6 @@
 //! The first two words record an `Rc` to the parameters of the lambda.
 //! The third word records the body of the lambda, which is another term.
 
-use crate::AllocError;
 use crate::Header;
 use crate::Kind;
 use crate::Payload;
@@ -62,8 +61,7 @@ impl UnsafeView
 impl Term
 {
     /// Create a lambda term.
-    pub fn lambda(parameters: Rc<[Parameter]>, body: Term)
-        -> Result<Self, AllocError>
+    pub fn lambda(parameters: Rc<[Parameter]>, body: Term) -> Self
     {
         // `Rc<[Parameter]>` is two words, as it is a fat pointer.
         // Maybe we will optimize this in the future, but not now.

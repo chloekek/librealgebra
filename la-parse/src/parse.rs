@@ -1,4 +1,3 @@
-use crate::Error;
 use crate::Result;
 use crate::Scope;
 use crate::Token;
@@ -29,7 +28,7 @@ fn parse_term_2(symbols: &Symbols, scope: &Scope, lex: &mut Lexer)
 {
     let mut term = parse_term_1(symbols, scope, lex)?;
     while let Some(arguments) = parse_argument_list(symbols, scope, lex)? {
-        term = Term::application(term, arguments)?;
+        term = Term::application(term, arguments);
     }
     Ok(term)
 }
@@ -50,8 +49,7 @@ fn parse_term_1(symbols: &Symbols, scope: &Scope, lex: &mut Lexer)
                 let scope = Scope::new(Some(scope), parameters);
                 parse_term(symbols, &scope, lex)?
             };
-            Term::lambda(parameters.into(), body)
-                .map_err(Error::from)
+            Ok(Term::lambda(parameters.into(), body))
         },
 
         Some(Token::LeftParenthesis) => {
@@ -61,21 +59,16 @@ fn parse_term_1(symbols: &Symbols, scope: &Scope, lex: &mut Lexer)
         },
 
         Some(Token::Integer(value)) =>
-            Term::integer_i32(value)
-                .map_err(Error::from),
+            Ok(Term::integer_i32(value)),
 
         Some(Token::String(value)) =>
-            Term::string(value.iter().copied())
-                .map_err(Error::from),
+            Ok(Term::string(value.iter().copied())),
 
         Some(Token::Identifier(ref name)) => {
-            let name = symbols.get(name)?;
+            let name = symbols.get(name);
             match scope.get(&name) {
-                Some(de_bruijn) =>
-                    Term::variable(de_bruijn)
-                        .map_err(Error::from),
-                None =>
-                    Ok(Term::symbol(name)),
+                Some(de_bruijn) => Ok(Term::variable(de_bruijn)),
+                None => Ok(Term::symbol(name)),
             }
         },
 
@@ -115,7 +108,7 @@ fn parse_parameter(symbols: &Symbols, lex: &mut Lexer) -> Result<Parameter>
 {
     let strictness = parse_strictness(lex);
     let name = parse_identifier(lex)?;
-    let name = symbols.get(&name)?;
+    let name = symbols.get(&name);
     Ok(Parameter{strictness, name})
 }
 

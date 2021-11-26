@@ -6,7 +6,6 @@
 //! The second word records the function being applied.
 //! The remaining words record the arguments, in order.
 
-use crate::AllocError;
 use crate::Header;
 use crate::Kind;
 use crate::Payload;
@@ -47,13 +46,12 @@ impl UnsafeView
 impl Term
 {
     /// Create an application term.
-    pub fn application<I, J>(function: Term, arguments: I)
-        -> Result<Self, AllocError>
+    pub fn application<I, J>(function: Term, arguments: I) -> Self
         where I: IntoIterator<IntoIter=J>
             , J: Iterator<Item=Term> + ExactSizeIterator + TrustedLen
     {
         let arguments = arguments.into_iter();
-        let payload_words = add(2, arguments.len())?;
+        let payload_words = add(2, arguments.len());
         unsafe {
             Self::new(payload_words, |payload| {
                 let view = UnsafeView::new(payload);

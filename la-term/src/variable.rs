@@ -3,7 +3,6 @@
 //! The payload of a variable term contains one word,
 //! which records the De Bruijn index of the variable.
 
-use super::AllocError;
 use super::Header;
 use super::Kind;
 use super::Payload;
@@ -49,7 +48,7 @@ impl UnsafeView
 impl Term
 {
     /// Create a variable term.
-    pub fn variable(de_bruijn: DeBruijn) -> Result<Self, AllocError>
+    pub fn variable(de_bruijn: DeBruijn) -> Self
     {
         // `DeBruijn` is 32 bits. A word is always at least 32 bits.
         let payload_words = 1;
