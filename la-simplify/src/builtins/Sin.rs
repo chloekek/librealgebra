@@ -14,6 +14,10 @@ pub fn simplify(c: Context, arguments: &[Term]) -> Option<Term>
 
     let operand = recurse(c, original_operand.clone());
 
+    if operand.eq_integer_i32(0) {
+        return Some(Term::integer_i32(0));
+    }
+
     if operand.eq_symbol(&c.names.Pi) {
         return Some(Term::integer_i32(0));
     }

@@ -8,6 +8,7 @@ use crate::Header;
 use crate::Kind;
 use crate::Payload;
 use crate::Term;
+use crate::View;
 
 /// Pointers to the words in the payload of an integer term.
 #[allow(missing_docs)]
@@ -56,5 +57,14 @@ impl Term
         let payload = self.payload();
         let view = UnsafeView::new(payload);
         *view.value
+    }
+
+    /// Whether this is that specific integer term.
+    pub fn eq_integer_i32(&self, value: i32) -> bool
+    {
+        match self.view() {
+            View::Integer(val) => val == value,
+            _ => false,
+        }
     }
 }
