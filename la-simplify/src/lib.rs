@@ -25,6 +25,14 @@ pub struct Session
     pub definitions: HashMap<Symbol, Term>,
 }
 
+impl Session
+{
+    pub fn new() -> Self
+    {
+        Self{definitions: HashMap::new()}
+    }
+}
+
 pub trait Warner
 {
 }
@@ -66,6 +74,27 @@ pub fn simplify(c: Context, term: Term) -> Term
 pub fn simplify_application(c: Context, function: &Term, arguments: &[Term])
     -> Option<Term>
 {
+    if function.eq_symbol(&c.builtins.Sin) {
+        return simplify_Sin(c, arguments);
+    }
+
+    None
+}
+
+#[allow(non_snake_case)]
+pub fn simplify_Sin(c: Context, arguments: &[Term]) -> Option<Term>
+{
+    if arguments.len() != 1 {
+        // TODO: Warn about arity of Sin.
+        return None;
+    }
+
+    let operand = &arguments[0];
+
+    if operand.eq_symbol(&c.builtins.Pi) {
+        return Some(Term::integer_i32(0).unwrap());
+    }
+
     None
 }
 

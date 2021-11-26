@@ -1,0 +1,13 @@
+[package]
+name = "librealgebra"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies.la-parse]
+path = "../la-parse"
+
+[dependencies.la-simplify]
+path = "../la-simplify"
+
+[dependencies.la-term]
+path = "../la-term"

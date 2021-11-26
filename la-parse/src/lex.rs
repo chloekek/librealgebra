@@ -1,6 +1,7 @@
+pub use logos::Logos;
+
 use alloc::borrow::Cow;
 use logos::Lexer;
-use logos::Logos;
 use num_bigint::BigUint;
 use num_traits::Num;
 

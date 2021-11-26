@@ -37,6 +37,7 @@ mod guard;
 ///
 /// This type is zero-sized so that `Result<Term, AllocError>`
 /// uses the niche optimization for non-null pointers.
+#[derive(Debug)]
 pub struct AllocError;
 
 /// Convenience function that adds two integers
@@ -70,7 +71,7 @@ pub struct Term
 pub enum View<'a>
 {
     Application(&'a Term, &'a [Term]),
-    Integer(),
+    Integer(i32),
     Lambda(&'a Rc<[lambda::Parameter]>, &'a Term),
     String(&'a [u8]),
     Symbol(&'a symbol::Symbol),
@@ -149,6 +150,7 @@ impl Term
                     let (function, arguments) = self.as_application_unchecked();
                     View::Application(function, arguments)
                 },
+                Kind::Integer => View::Integer(self.as_integer_unchecked()),
                 Kind::Lambda => {
                     let (parameters, body) = self.as_lambda_unchecked();
                     View::Lambda(parameters, body)
@@ -156,7 +158,6 @@ impl Term
                 Kind::String => View::String(self.as_string_unchecked()),
                 Kind::Symbol => View::Symbol(self.as_symbol_unchecked()),
                 Kind::Variable => View::Variable(self.as_variable_unchecked()),
-                kind => todo!("{:?}", kind),
             }
         }
     }

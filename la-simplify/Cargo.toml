@@ -1,5 +1,5 @@
 [package]
-name = "la_simplify"
+name = "la-simplify"
 version = "0.0.0"
 edition = "2021"
 

@@ -61,7 +61,7 @@ fn parse_term_1(symbols: &Symbols, scope: &Scope, lex: &mut Lexer)
         },
 
         Some(Token::Integer(value)) =>
-            Term::integer(value)
+            Term::integer_big_uint(value)
                 .map_err(Error::from),
 
         Some(Token::String(value)) =>
