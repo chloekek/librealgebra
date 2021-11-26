@@ -56,5 +56,5 @@ macro_rules! builtins
 }
 
 builtins! {
-    Sin
+    Cos Sin
 }
