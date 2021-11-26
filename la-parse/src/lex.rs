@@ -2,8 +2,6 @@ pub use logos::Logos;
 
 use alloc::borrow::Cow;
 use logos::Lexer;
-use num_bigint::BigUint;
-use num_traits::Num;
 
 /// Token generated during lexing.
 #[derive(Debug, Logos)]
@@ -36,7 +34,7 @@ pub enum Token<'a>
 
     /// Integer token.
     #[regex(r"[0-9]+", lex_integer)]
-    Integer(BigUint),
+    Integer(i32),
 
     /// String token.
     #[regex(r#""[^"]+""#, lex_string)]
@@ -52,9 +50,9 @@ pub enum Token<'a>
     Identifier(Cow<'a, [u8]>),
 }
 
-fn lex_integer<'a>(lex: &mut Lexer<'a, Token<'a>>) -> Option<BigUint>
+fn lex_integer<'a>(lex: &mut Lexer<'a, Token<'a>>) -> Option<i32>
 {
-    BigUint::from_str_radix(lex.slice(), 10).ok()
+    i32::from_str_radix(lex.slice(), 10).ok()
 }
 
 fn lex_string<'a>(lex: &mut Lexer<'a, Token<'a>>) -> Cow<'a, [u8]>

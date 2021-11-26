@@ -10,8 +10,6 @@ use crate::Kind;
 use crate::Payload;
 use crate::Term;
 
-use num_bigint::BigUint;
-
 /// Pointers to the words in the payload of an integer term.
 #[allow(missing_docs)]
 #[derive(Clone, Copy)]
@@ -35,12 +33,6 @@ impl UnsafeView
 
 impl Term
 {
-    /// Create an integer term.
-    pub fn integer_big_uint(_value: BigUint) -> Result<Self, AllocError>
-    {
-        todo!()
-    }
-
     /// Create an integer term.
     pub fn integer_i32(value: i32) -> Result<Self, AllocError>
     {

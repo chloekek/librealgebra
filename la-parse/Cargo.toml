@@ -15,11 +15,3 @@ path = "../la-term"
 default-features = false
 features = ["export_derive"]
 version = "~0.12.0"
-
-[dependencies.num-bigint]
-default-features = false
-version = "~0.4.3"
-
-[dependencies.num-traits]
-default-features = false
-version = "~0.2.14"
