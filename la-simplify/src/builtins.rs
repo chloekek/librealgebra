@@ -7,7 +7,6 @@ macro_rules! builtins
     ($($name:ident)*) => {
         /// Each symbol that needs special treatment in the simplifier.
         #[allow(missing_docs)]
-        #[allow(non_snake_case)]
         pub struct Builtins
         {
             $(pub $name: Symbol,)*

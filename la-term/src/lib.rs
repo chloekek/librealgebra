@@ -123,6 +123,12 @@ impl Term
         self.ptr.as_ptr()
     }
 
+    // Whether two terms are the same object.
+    pub fn ptr_eq(&self, other: &Term) -> bool
+    {
+        self.as_ptr() == other.as_ptr()
+    }
+
     /// Access the header of the term.
     pub fn header(&self) -> Header
     {

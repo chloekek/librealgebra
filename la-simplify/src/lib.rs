@@ -1,3 +1,7 @@
+// Many places in the code refer to Libre Algebra symbols.
+// These symbols are in Pascal case, so we disable this warning.
+#![allow(non_snake_case)]
+
 #![no_std]
 #![warn(missing_docs)]
 
@@ -11,6 +15,7 @@ use la_term::symbol::Symbols;
 
 mod builtins;
 
+#[derive(Clone, Copy)]
 pub struct Context<'a>
 {
     pub depth: usize,
@@ -81,7 +86,6 @@ pub fn simplify_application(c: Context, function: &Term, arguments: &[Term])
     None
 }
 
-#[allow(non_snake_case)]
 pub fn simplify_Sin(c: Context, arguments: &[Term]) -> Option<Term>
 {
     if arguments.len() != 1 {
@@ -89,13 +93,20 @@ pub fn simplify_Sin(c: Context, arguments: &[Term]) -> Option<Term>
         return None;
     }
 
-    let operand = &arguments[0];
+    let original_operand = &arguments[0];
+
+    let operand = recurse(c, original_operand.clone());
 
     if operand.eq_symbol(&c.builtins.Pi) {
         return Some(Term::integer_i32(0).unwrap());
     }
 
-    None
+    if operand.ptr_eq(&original_operand) {
+        None
+    } else {
+        let Sin = Term::symbol(c.builtins.Sin.clone());
+        Some(Term::application(Sin, [operand]).unwrap())
+    }
 }
 
 pub fn simplify_symbol(c: Context, symbol: &Symbol) -> Term
