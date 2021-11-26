@@ -1,0 +1,11 @@
+[package]
+name = "la_simplify"
+version = "0.0.0"
+edition = "2021"
+
+# Library for hash tables.
+[dependencies.hashbrown]
+version = "~0.11.2"
+
+[dependencies.la-term]
+path = "../la-term"

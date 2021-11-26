@@ -1,5 +1,6 @@
 [workspace]
 members = [
     "la-parse",
+    "la-simplify",
     "la-term",
 ]

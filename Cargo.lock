@@ -77,6 +77,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "la_simplify"
+version = "0.0.0"
+dependencies = [
+ "hashbrown",
+ "la-term",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.108"
 source = "registry+https://github.com/rust-lang/crates.io-index"
