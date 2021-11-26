@@ -5,7 +5,9 @@
 #![no_std]
 #![warn(missing_docs)]
 
-pub use self::builtins::*;
+pub use self::names::*;
+
+use self::builtins::Builtins;
 
 use hashbrown::HashMap;
 use la_term::Term;
@@ -13,13 +15,16 @@ use la_term::View;
 use la_term::symbol::Symbol;
 use la_term::symbol::Symbols;
 
-mod builtins;
+pub mod builtins;
+
+mod names;
 
 #[derive(Clone, Copy)]
 pub struct Context<'a>
 {
     pub depth: usize,
     pub builtins: &'a Builtins,
+    pub names: &'a Names,
     pub session: &'a Session,
     pub symbols: &'a Symbols,
     pub warner: &'a dyn Warner,
@@ -79,33 +84,20 @@ pub fn simplify(c: Context, term: Term) -> Term
 pub fn simplify_application(c: Context, function: &Term, arguments: &[Term])
     -> Option<Term>
 {
-    if function.eq_symbol(&c.builtins.Sin) {
-        return simplify_Sin(c, arguments);
-    }
+    /// First simplify the function itself.
+    let function = recurse(c, function.clone());
 
-    None
-}
+    match function.view() {
 
-pub fn simplify_Sin(c: Context, arguments: &[Term]) -> Option<Term>
-{
-    if arguments.len() != 1 {
-        // TODO: Warn about arity of Sin.
-        return None;
-    }
+        // If the function is a symbol even after simplification,
+        // then it can only be a builtin or not a function at all.
+        // User-defined symbols should evaluate to their definitions.
+        View::Symbol(builtin) =>
+            c.builtins.get(builtin)
+                .and_then(|b| b(c, arguments)),
 
-    let original_operand = &arguments[0];
+        _ => todo!(),
 
-    let operand = recurse(c, original_operand.clone());
-
-    if operand.eq_symbol(&c.builtins.Pi) {
-        return Some(Term::integer_i32(0));
-    }
-
-    if operand.ptr_eq(&original_operand) {
-        None
-    } else {
-        let Sin = Term::symbol(c.builtins.Sin.clone());
-        Some(Term::application(Sin, [operand]))
     }
 }
 

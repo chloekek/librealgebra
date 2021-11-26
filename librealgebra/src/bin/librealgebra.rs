@@ -2,10 +2,11 @@ use la_parse::Logos;
 use la_parse::Scope;
 use la_parse::Token;
 use la_parse::parse_term;
-use la_simplify::Builtins;
 use la_simplify::Context;
+use la_simplify::Names;
 use la_simplify::Session;
 use la_simplify::Warner;
+use la_simplify::builtins::Builtins;
 use la_simplify::simplify;
 use la_term::symbol::Symbols;
 use std::io::Read;
@@ -20,7 +21,8 @@ fn main()
 
     let session = Session::new();
     let symbols = Symbols::new();
-    let builtins = Builtins::new(&symbols);
+    let names = Names::new(&symbols);
+    let builtins = Builtins::new(&names);
     let warner = StderrWarner;
 
     let scope = Scope::new(None, []);
@@ -30,6 +32,7 @@ fn main()
     let context = Context{
         depth: 0,
         builtins: &builtins,
+        names: &names,
         session: &session,
         symbols: &symbols,
         warner: &warner,
