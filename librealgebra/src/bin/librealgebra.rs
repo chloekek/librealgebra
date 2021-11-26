@@ -30,7 +30,7 @@ fn main()
     let term = parse_term(&symbols, &scope, &mut lexer).unwrap();
 
     let context = Context{
-        depth: 0,
+        recursion_limit: 16,
         builtins: &builtins,
         names: &names,
         session: &session,

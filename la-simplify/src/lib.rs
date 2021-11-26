@@ -22,7 +22,7 @@ mod names;
 #[derive(Clone, Copy)]
 pub struct Context<'a>
 {
-    pub depth: usize,
+    pub recursion_limit: usize,
     pub builtins: &'a Builtins,
     pub names: &'a Names,
     pub session: &'a Session,
@@ -49,13 +49,14 @@ pub trait Warner
 
 pub fn recurse(mut c: Context, term: Term) -> Term
 {
-    c.depth += 1;
+    c.recursion_limit -= 1;
     simplify(c, term)
 }
 
 pub fn simplify(c: Context, term: Term) -> Term
 {
-    if c.depth >= 16 {
+    if c.recursion_limit == 0 {
+        // TODO: Emit warning about recursion depth reached.
         return term;
     }
 
