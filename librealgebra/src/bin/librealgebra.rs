@@ -2,8 +2,8 @@ use la_parse::Logos;
 use la_parse::Scope;
 use la_parse::Token;
 use la_parse::parse_term;
+use la_simplify::Constants;
 use la_simplify::Context;
-use la_simplify::Names;
 use la_simplify::Session;
 use la_simplify::Warner;
 use la_simplify::builtins::Builtins;
@@ -21,8 +21,8 @@ fn main()
 
     let session = Session::new();
     let symbols = Symbols::new();
-    let names = Names::new(&symbols);
-    let builtins = Builtins::new(&names);
+    let constants = Constants::new(&symbols);
+    let builtins = Builtins::new(&constants);
     let warner = StderrWarner;
 
     let scope = Scope::new(None, []);
@@ -32,7 +32,7 @@ fn main()
     let context = Context{
         recursion_limit: 16,
         builtins: &builtins,
-        names: &names,
+        constants: &constants,
         session: &session,
         symbols: &symbols,
         warner: &warner,

@@ -134,6 +134,15 @@ pub struct Symbol
 
 impl Symbol
 {
+    /// Unwrap the symbol term.
+    ///
+    /// Unlike [`Term::symbol`], this clones the term for you.
+    /// So you can write `s.term()` instead of `Term::symbol(s.clone())`.
+    pub fn term(&self) -> Term
+    {
+        Term::symbol(self.clone())
+    }
+
     /// The name of the symbol.
     pub fn name(&self) -> &[u8]
     {

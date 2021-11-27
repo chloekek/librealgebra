@@ -16,17 +16,17 @@ pub fn simplify(c: Context, arguments: &[Term]) -> Option<Term>
     let operand = recurse(c, original_operand.clone());
 
     if operand.eq_integer_i32(0) {
-        return Some(Term::integer_i32(0));
+        return Some(c.constants.integer_0.clone());
     }
 
-    if operand.eq_symbol(&c.names.Pi) {
-        return Some(Term::integer_i32(0));
+    if operand.eq_symbol(&c.constants.Pi) {
+        return Some(c.constants.integer_0.clone());
     }
 
     if operand.ptr_eq(&original_operand) {
         None
     } else {
-        let Sin = Term::symbol(c.names.Sin.clone());
+        let Sin = c.constants.Sin.term();
         Some(Term::application(Sin, [operand]))
     }
 }

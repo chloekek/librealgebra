@@ -1,7 +1,7 @@
 //! Simplification of applications of builtins.
 
+use crate::Constants;
 use crate::Context;
-use crate::Names;
 
 use hashbrown::HashMap;
 use la_term::Term;
@@ -37,10 +37,10 @@ macro_rules! builtins
         impl Builtins
         {
             /// Collect all builtins into the table.
-            pub fn new(names: &Names) -> Self
+            pub fn new(constants: &Constants) -> Self
             {
                 let mut jump_table = HashMap::<_, Builtin>::new();
-                $(jump_table.insert(names.$name.clone(), $name::simplify);)*
+                $(jump_table.insert(constants.$name.clone(), $name::simplify);)*
                 Self{jump_table}
             }
 
@@ -58,5 +58,6 @@ macro_rules! builtins
 }
 
 builtins! {
+    Derivative
     Cos Sin
 }

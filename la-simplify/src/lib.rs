@@ -7,7 +7,9 @@
 #![no_std]
 #![warn(missing_docs)]
 
-pub use self::names::*;
+extern crate alloc;
+
+pub use self::constants::*;
 
 use self::builtins::Builtins;
 
@@ -19,7 +21,7 @@ use la_term::symbol::Symbols;
 
 pub mod builtins;
 
-mod names;
+mod constants;
 
 /// Information threaded through the simplifier.
 ///
@@ -35,7 +37,7 @@ pub struct Context<'a>
     pub recursion_limit: usize,
 
     pub builtins: &'a Builtins,
-    pub names: &'a Names,
+    pub constants: &'a Constants,
     pub session: &'a Session,
     pub symbols: &'a Symbols,
     pub warner: &'a dyn Warner,
