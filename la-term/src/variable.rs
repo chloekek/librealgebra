@@ -7,11 +7,12 @@ use super::Header;
 use super::Kind;
 use super::Payload;
 use super::Term;
+use super::View;
 
 use core::ops::Add;
 
 /// A De Bruijn index references a variable.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct DeBruijn(pub u32);
 
 impl Add<u32> for DeBruijn
@@ -67,5 +68,14 @@ impl Term
         let payload = self.payload();
         let view = UnsafeView::new(payload);
         *view.de_bruijn
+    }
+
+    /// Whether this is that specific variable term.
+    pub fn eq_variable(&self, de_bruijn: DeBruijn) -> bool
+    {
+        match self.view() {
+            View::Variable(var) => var == de_bruijn,
+            _ => false,
+        }
     }
 }

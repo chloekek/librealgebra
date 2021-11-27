@@ -2,6 +2,8 @@ use crate::Context;
 use crate::recurse;
 
 use la_term::Term;
+use la_term::View;
+use la_term::variable::DeBruijn;
 
 /// Simplify an application of `Derivative`.
 pub fn simplify(c: Context, arguments: &[Term]) -> Option<Term>
@@ -27,6 +29,7 @@ pub fn simplify(c: Context, arguments: &[Term]) -> Option<Term>
     }
 }
 
+/// Find the derivative of `function`.
 fn function_derivative(c: Context, function: Term) -> Option<Term>
 {
     if function.eq_symbol(&c.constants.Sin) {
@@ -35,6 +38,23 @@ fn function_derivative(c: Context, function: Term) -> Option<Term>
 
     if function.eq_symbol(&c.constants.Cos) {
         return Some(c.constants.lambda_neg_Sin.clone());
+    }
+
+    if let View::Lambda(parameters, body) = function.view() {
+        if parameters.len() == 1 {
+            let body_derivative = term_derivative(c, DeBruijn(0), body.clone())?;
+            return Some(Term::lambda(parameters.clone(), body_derivative));
+        }
+    }
+
+    None
+}
+
+/// Find the derivative of `term` with respect to `parameter`.
+fn term_derivative(c: Context, parameter: DeBruijn, term: Term) -> Option<Term>
+{
+    if term.eq_variable(parameter) {
+        return Some(c.constants.integer_1.clone());
     }
 
     None
