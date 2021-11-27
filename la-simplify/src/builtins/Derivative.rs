@@ -13,6 +13,10 @@ pub fn simplify(c: Context, arguments: &[Term]) -> Option<Term>
         return None;
     }
 
+    // TODO: Support multi-parameter functions.
+    // If arguments are given to Derivative,
+    // check that they are a symbol and a lambda.
+
     let original_function = &arguments[0];
 
     let function = recurse(c, original_function.clone());
@@ -29,7 +33,7 @@ pub fn simplify(c: Context, arguments: &[Term]) -> Option<Term>
     }
 }
 
-/// Find the derivative of `function`.
+/// Find the derivative of `function`, which must be a unary function.
 fn function_derivative(c: Context, function: Term) -> Option<Term>
 {
     if function.eq_symbol(&c.constants.Sin) {
