@@ -35,11 +35,7 @@ pub struct UnsafeView
 impl UnsafeView
 {
     /// Obtain the pointers to the words in the payload of a variable term.
-    ///
-    /// # Safety
-    ///
-    /// This function calls [`pointer::add`].
-    pub unsafe fn new(payload: *mut Payload) -> Self
+    pub fn new(payload: *mut Payload) -> Self
     {
         Self{de_bruijn: payload as *mut DeBruijn}
     }
