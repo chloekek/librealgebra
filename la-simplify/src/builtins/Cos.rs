@@ -3,6 +3,7 @@ use crate::recurse;
 
 use la_term::Term;
 
+/// Simplify an application of `Cos`.
 pub fn simplify(c: Context, arguments: &[Term]) -> Option<Term>
 {
     if arguments.len() != 1 {

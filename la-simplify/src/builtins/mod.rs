@@ -1,3 +1,5 @@
+//! Simplification of applications of builtins.
+
 use crate::Context;
 use crate::Names;
 
