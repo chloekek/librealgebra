@@ -111,9 +111,14 @@ impl DeBruijnCache
 
     pub const UNKNOWN: Self = Self{bits: 0xFFFF};
 
+    pub fn is_unknown(self) -> bool
+    {
+        self.bits == Self::UNKNOWN.bits
+    }
+
     pub fn contains(self, de_bruijn: DeBruijn) -> Option<bool>
     {
-        if self.bits == 0xFFFF {
+        if self.is_unknown() {
             None
         } else if de_bruijn.0 >= 16 {
             Some(false)
@@ -157,7 +162,7 @@ impl Shr<u32> for DeBruijnCache
 
     fn shr(self, rhs: u32) -> Self::Output
     {
-        if self.bits == 0xFFFF {
+        if self.is_unknown() {
             self
         } else {
             Self{bits: self.bits.checked_shr(rhs).unwrap_or(0)}
@@ -170,5 +175,96 @@ impl ShrAssign<u32> for DeBruijnCache
     fn shr_assign(&mut self, rhs: u32)
     {
         *self = *self >> rhs;
+    }
+}
+
+#[cfg(test)]
+mod tests
+{
+    use super::*;
+
+    use proptest::arbitrary::Arbitrary;
+    use proptest::proptest;
+    use proptest::strategy::Map;
+    use proptest::strategy::Strategy;
+
+    impl Arbitrary for DeBruijn
+    {
+        type Parameters = <u32 as Arbitrary>::Parameters;
+
+        type Strategy = Map<<u32 as Arbitrary>::Strategy, fn(u32) -> DeBruijn>;
+
+        fn arbitrary_with(args: Self::Parameters) -> Self::Strategy
+        {
+            <u32 as Arbitrary>::arbitrary_with(args)
+                .prop_map(DeBruijn)
+        }
+    }
+
+    proptest!
+    {
+        #[test]
+        fn empty_answers_false(de_bruijn: DeBruijn)
+        {
+            let cache = DeBruijnCache::EMPTY;
+            assert_eq!(cache.contains(de_bruijn), Some(false));
+        }
+
+        #[test]
+        fn unknown_answers_none(de_bruijn: DeBruijn)
+        {
+            let cache = DeBruijnCache::UNKNOWN;
+            assert_eq!(cache.contains(de_bruijn), None);
+        }
+
+        #[test]
+        fn small_answers_true(de_bruijn in 0 .. 16u32)
+        {
+            let de_bruijn = DeBruijn(de_bruijn);
+            let cache = DeBruijnCache::EMPTY.insert(de_bruijn);
+            assert_eq!(cache.contains(de_bruijn), Some(true));
+        }
+
+        #[test]
+        fn large_answers_false(small in 0 .. 16u32, large in 16u32 ..)
+        {
+            let small = DeBruijn(small);
+            let large = DeBruijn(large);
+            let cache = DeBruijnCache::EMPTY.insert(small);
+            assert_eq!(cache.contains(large), Some(false));
+        }
+
+        #[test]
+        fn insert_all_small_enters_unknown(de_bruijn: DeBruijn)
+        {
+            let cache =
+                (0 .. 16)
+                .map(DeBruijn)
+                .fold(DeBruijnCache::EMPTY,
+                      DeBruijnCache::insert);
+            assert_eq!(cache.contains(de_bruijn), None);
+        }
+
+        #[test]
+        fn insert_any_large_enters_unknown(de_bruijn in 16u32 ..)
+        {
+            let de_bruijn = DeBruijn(de_bruijn);
+            let cache = DeBruijnCache::EMPTY.insert(de_bruijn);
+            assert_eq!(cache.contains(de_bruijn), None);
+        }
+
+        #[test]
+        fn shift_shifts(shift in 0u32 .. 16)
+        {
+            let cache = DeBruijnCache::EMPTY.insert(DeBruijn(15)) >> shift;
+            assert_eq!(cache.contains(DeBruijn(15 - shift)), Some(true));
+        }
+
+        #[test]
+        fn shift_retains_unknown(shift: u32)
+        {
+            let cache = DeBruijnCache::UNKNOWN >> shift;
+            assert!(cache.is_unknown());
+        }
     }
 }

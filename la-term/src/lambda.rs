@@ -9,7 +9,6 @@ use crate::Kind;
 use crate::Payload;
 use crate::Term;
 use crate::symbol::Symbol;
-use crate::variable::DeBruijnCache;
 
 use alloc::rc::Rc;
 
