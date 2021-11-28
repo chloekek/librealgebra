@@ -99,6 +99,21 @@ impl Add<u32> for DeBruijn
 ////////////////////////////////////////////////////////////////////////////////
 // De Bruijn caches
 
+/// Set of De Bruijn indices used to locate free variables.
+///
+/// Each object contains a De Bruijn cache in its header.
+/// The purpose of the De Bruijn cache is to speed up answering the question:
+/// “does a particular variable appear free in a given term?”
+/// When the De Bruijn cache is able to answer the question,
+/// then the answer can be found in constant time
+/// (the term does not have to be traversed).
+/// Due to the limited amount of available space in the object header,
+/// the De Bruijn cache only has space for variables
+/// with small De Bruijn indices.
+/// Attempting to insert a variable with a higher De Bruijn index
+/// causes the De Bruijn cache to enter a special “unknown” state,
+/// from which it is no longer able to answer the question
+/// (requiring traversal of the term).
 #[derive(Clone, Copy)]
 pub struct DeBruijnCache
 {
@@ -107,15 +122,23 @@ pub struct DeBruijnCache
 
 impl DeBruijnCache
 {
+    /// The De Bruijn cache with no variables in it.
     pub const EMPTY: Self = Self{bits: 0};
 
+    /// The De Bruijn cache in the “unknown” state.
     pub const UNKNOWN: Self = Self{bits: 0xFFFF};
 
+    /// Whether the De Bruijn cache is in the “unknown” state.
     pub fn is_unknown(self) -> bool
     {
         self.bits == Self::UNKNOWN.bits
     }
 
+    /// Whether the De Bruijn cache contains a given variable.
+    ///
+    /// If this method returns `Some`, the answer is correct.
+    /// Otherwise, the De Bruijn cache is in the “unknown” state,
+    /// and the answer should be taken to be neither true nor false.
     pub fn contains(self, de_bruijn: DeBruijn) -> Option<bool>
     {
         if self.is_unknown() {
@@ -127,6 +150,12 @@ impl DeBruijnCache
         }
     }
 
+    /// Insert a variable into the De Bruijn cache.
+    ///
+    /// If the De Bruijn index of the variable is too large,
+    /// the cache will enter the “unknown” state.
+    /// It will also enter the “unknown” state if this completes
+    /// the set of variables with small De Bruijn indices.
     #[must_use]
     pub fn insert(self, de_bruijn: DeBruijn) -> Self
     {
@@ -138,6 +167,7 @@ impl DeBruijnCache
     }
 }
 
+/// Take the set union of two De Bruijn caches.
 impl BitOr for DeBruijnCache
 {
     type Output = Self;
@@ -148,6 +178,7 @@ impl BitOr for DeBruijnCache
     }
 }
 
+/// See the impl for `BitOr`.
 impl BitOrAssign for DeBruijnCache
 {
     fn bitor_assign(&mut self, rhs: DeBruijnCache)
@@ -156,6 +187,16 @@ impl BitOrAssign for DeBruijnCache
     }
 }
 
+/// Decrement each De Bruijn index in the cache by the given amount.
+///
+/// This is used for computing the De Bruijn cache of a lambda term.
+/// Lambda terms are a point where the De Bruijn index of each variable
+/// is increased by the number of lambda parameters.
+/// Thus, to compute the De Bruijn cache of the lambda term itself,
+/// the De Bruijn index of each variable must be decreased.
+/// De Bruijn indices that would be decreased beyond zero are discarded,
+/// as they do not appear free in the lambda term itself
+/// (they are bound by the lambda term as parameters).
 impl Shr<u32> for DeBruijnCache
 {
     type Output = Self;
@@ -170,6 +211,7 @@ impl Shr<u32> for DeBruijnCache
     }
 }
 
+/// See the impl for `Shr`.
 impl ShrAssign<u32> for DeBruijnCache
 {
     fn shr_assign(&mut self, rhs: u32)
