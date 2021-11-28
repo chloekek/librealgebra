@@ -11,6 +11,7 @@ use crate::Payload;
 use crate::Term;
 use crate::View;
 use crate::add;
+use crate::variable::DeBruijnCache;
 
 use core::borrow::Borrow;
 use core::cell::RefCell;
@@ -75,7 +76,7 @@ impl Term
                 let view = UnsafeView::new(payload);
                 view.name_len.write(name.len());
                 copy(name.as_ptr(), view.name, name.len());
-                Header::new(Kind::Symbol)
+                Header::new(Kind::Symbol, DeBruijnCache::EMPTY)
             })
         }
     }

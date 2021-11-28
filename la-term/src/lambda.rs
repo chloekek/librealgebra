@@ -9,6 +9,7 @@ use crate::Kind;
 use crate::Payload;
 use crate::Term;
 use crate::symbol::Symbol;
+use crate::variable::DeBruijnCache;
 
 use alloc::rc::Rc;
 
@@ -68,10 +69,18 @@ impl Term
         let payload_words = 3;
         unsafe {
             Self::new(payload_words, |payload| {
+
+                // TODO: Decide what to do when this overflows.
+                let de_bruijn_cache =
+                    body.header().de_bruijn_cache
+                        >> parameters.len().try_into().unwrap();
+
                 let view = UnsafeView::new(payload);
                 view.parameters.write(parameters);
                 view.body.write(body);
-                Header::new(Kind::Lambda)
+
+                Header::new(Kind::Lambda, de_bruijn_cache)
+
             })
         }
     }

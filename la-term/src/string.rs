@@ -10,6 +10,7 @@ use crate::Kind;
 use crate::Payload;
 use crate::Term;
 use crate::add;
+use crate::variable::DeBruijnCache;
 
 use core::iter::TrustedLen;
 use core::mem::size_of;
@@ -64,7 +65,7 @@ impl Term
                 for (i, byte) in bytes.enumerate() {
                     view.bytes.add(i).write(byte);
                 }
-                Header::new(Kind::String)
+                Header::new(Kind::String, DeBruijnCache::EMPTY)
             })
         }
     }

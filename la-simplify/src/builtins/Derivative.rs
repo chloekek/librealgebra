@@ -57,6 +57,10 @@ fn function_derivative(c: Context, function: Term) -> Option<Term>
 /// Find the derivative of `term` with respect to `parameter`.
 fn term_derivative(c: Context, parameter: DeBruijn, term: Term) -> Option<Term>
 {
+    if term.header().de_bruijn_cache.contains(parameter) == Some(false) {
+        return Some(c.constants.integer_0.clone());
+    }
+
     if term.eq_variable(parameter) {
         return Some(c.constants.integer_1.clone());
     }

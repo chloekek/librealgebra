@@ -10,20 +10,13 @@ use super::Term;
 use super::View;
 
 use core::ops::Add;
+use core::ops::BitOr;
+use core::ops::BitOrAssign;
+use core::ops::Shr;
+use core::ops::ShrAssign;
 
-/// A De Bruijn index references a variable.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct DeBruijn(pub u32);
-
-impl Add<u32> for DeBruijn
-{
-    type Output = DeBruijn;
-
-    fn add(self, rhs: u32) -> Self::Output
-    {
-        DeBruijn(self.0 + rhs)
-    }
-}
+////////////////////////////////////////////////////////////////////////////////
+// Variable terms
 
 /// Pointers to the words in the payload of a variable term.
 #[allow(missing_docs)]
@@ -51,9 +44,15 @@ impl Term
         let payload_words = 1;
         unsafe {
             Self::new(payload_words, |payload| {
+
+                // A variable appears free in itself.
+                let de_bruijn_cache = DeBruijnCache::EMPTY.insert(de_bruijn);
+
                 let view = UnsafeView::new(payload);
                 view.de_bruijn.write(de_bruijn);
-                Header::new(Kind::Variable)
+
+                Header::new(Kind::Variable, de_bruijn_cache)
+
             })
         }
     }
@@ -77,5 +76,99 @@ impl Term
             View::Variable(var) => var == de_bruijn,
             _ => false,
         }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// De Bruijn indices
+
+/// A De Bruijn index references a variable.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct DeBruijn(pub u32);
+
+impl Add<u32> for DeBruijn
+{
+    type Output = DeBruijn;
+
+    fn add(self, rhs: u32) -> Self::Output
+    {
+        DeBruijn(self.0 + rhs)
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// De Bruijn caches
+
+#[derive(Clone, Copy)]
+pub struct DeBruijnCache
+{
+    bits: u16,
+}
+
+impl DeBruijnCache
+{
+    pub const EMPTY: Self = Self{bits: 0};
+
+    pub const UNKNOWN: Self = Self{bits: 0xFFFF};
+
+    pub fn contains(self, de_bruijn: DeBruijn) -> Option<bool>
+    {
+        if self.bits == 0xFFFF {
+            None
+        } else if de_bruijn.0 >= 16 {
+            Some(false)
+        } else {
+            Some(self.bits & 1 << de_bruijn.0 != 0)
+        }
+    }
+
+    #[must_use]
+    pub fn insert(self, de_bruijn: DeBruijn) -> Self
+    {
+        if de_bruijn.0 >= 16 {
+            Self::UNKNOWN
+        } else {
+            Self{bits: self.bits | 1 << de_bruijn.0}
+        }
+    }
+}
+
+impl BitOr for DeBruijnCache
+{
+    type Output = Self;
+
+    fn bitor(self, rhs: DeBruijnCache) -> Self::Output
+    {
+        Self{bits: self.bits | rhs.bits}
+    }
+}
+
+impl BitOrAssign for DeBruijnCache
+{
+    fn bitor_assign(&mut self, rhs: DeBruijnCache)
+    {
+        *self = *self | rhs;
+    }
+}
+
+impl Shr<u32> for DeBruijnCache
+{
+    type Output = Self;
+
+    fn shr(self, rhs: u32) -> Self::Output
+    {
+        if self.bits == 0xFFFF {
+            self
+        } else {
+            Self{bits: self.bits.checked_shr(rhs).unwrap_or(0)}
+        }
+    }
+}
+
+impl ShrAssign<u32> for DeBruijnCache
+{
+    fn shr_assign(&mut self, rhs: u32)
+    {
+        *self = *self >> rhs;
     }
 }

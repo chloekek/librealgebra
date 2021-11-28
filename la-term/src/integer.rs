@@ -9,6 +9,7 @@ use crate::Kind;
 use crate::Payload;
 use crate::Term;
 use crate::View;
+use crate::variable::DeBruijnCache;
 
 /// Pointers to the words in the payload of an integer term.
 #[allow(missing_docs)]
@@ -38,7 +39,7 @@ impl Term
             Self::new(payload_words, |payload| {
                 let view = UnsafeView::new(payload);
                 view.value.write(value);
-                Header::new(Kind::Integer)
+                Header::new(Kind::Integer, DeBruijnCache::EMPTY)
             })
         }
     }

@@ -11,6 +11,7 @@ use crate::Kind;
 use crate::Payload;
 use crate::Term;
 use crate::add;
+use crate::variable::DeBruijnCache;
 
 use core::iter::TrustedLen;
 use core::slice;
@@ -54,14 +55,23 @@ impl Term
         let payload_words = add(2, arguments.len());
         unsafe {
             Self::new(payload_words, |payload| {
+
+                // We shall also update this for each argument, below.
+                let mut de_bruijn_cache = DeBruijnCache::EMPTY;
+                de_bruijn_cache |= function.header().de_bruijn_cache;
+
                 let view = UnsafeView::new(payload);
                 view.argument_count.write(arguments.len());
                 view.function.write(function);
+
                 // BUG: Memory leak if iterator panics.
                 for (i, argument) in arguments.enumerate() {
+                    de_bruijn_cache |= argument.header().de_bruijn_cache;
                     view.arguments.add(i).write(argument);
                 }
-                Header::new(Kind::Application)
+
+                Header::new(Kind::Application, de_bruijn_cache)
+
             })
         }
     }

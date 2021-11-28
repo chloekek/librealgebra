@@ -12,6 +12,7 @@ extern crate alloc;
 
 use self::guard::Guard;
 use self::object::*;
+use self::variable::DeBruijnCache;
 
 use alloc::alloc::alloc;
 use alloc::alloc::dealloc;
@@ -207,6 +208,8 @@ impl fmt::Debug for Term
 /// consider adding the required functionality to this crate instead.
 pub mod object
 {
+    use super::*;
+
     /// In-memory representation of a term.
     #[allow(missing_docs)]
     pub struct Object
@@ -225,14 +228,17 @@ pub mod object
 
         /// Which kind of term this is.
         pub kind: Kind,
+
+        /// See [`DeBruijnCache`].
+        pub de_bruijn_cache: DeBruijnCache,
     }
 
     impl Header
     {
         /// Create a header with a reference count of one.
-        pub fn new(kind: Kind) -> Self
+        pub fn new(kind: Kind, de_bruijn_cache: DeBruijnCache) -> Self
         {
-            Self{kind, ref_count: 1}
+            Self{ref_count: 1, kind, de_bruijn_cache}
         }
     }
 
