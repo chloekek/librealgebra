@@ -2,13 +2,12 @@ use crate::Result;
 use crate::Scope;
 use crate::Token;
 
-use alloc::borrow::Cow;
-use alloc::vec::Vec;
-use core::iter::Peekable;
 use la_term::Term;
 use la_term::lambda::Parameter;
 use la_term::lambda::Strictness;
 use la_term::symbol::Symbols;
+use std::borrow::Cow;
+use std::iter::Peekable;
 
 /// Stream of tokens generated from text.
 pub type Lexer<'a> = Peekable<logos::Lexer<'a, Token<'a>>>;

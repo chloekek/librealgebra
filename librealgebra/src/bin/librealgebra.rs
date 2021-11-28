@@ -1,4 +1,3 @@
-use core::cell::Cell;
 use la_parse::Logos;
 use la_parse::Scope;
 use la_parse::Token;
@@ -10,8 +9,10 @@ use la_simplify::Warner;
 use la_simplify::builtins::Builtins;
 use la_simplify::simplify;
 use la_term::symbol::Symbols;
+use std::cell::Cell;
 use std::io::Read;
 use std::io::stdin;
+use std::sync::atomic::AtomicBool;
 
 fn main()
 {
@@ -30,8 +31,9 @@ fn main()
     let mut lexer = Token::lexer(&input).peekable();
     let term = parse_term(&symbols, &scope, &mut lexer).unwrap();
 
-    let mut context = Context{
+    let context = Context{
         recursion_limit: Cell::new(16),
+        stop_requested: &AtomicBool::new(false),
         builtins: &builtins,
         constants: &constants,
         session: &session,
@@ -39,7 +41,7 @@ fn main()
         warner: &warner,
     };
 
-    let term = simplify(&mut context, term);
+    let term = simplify(&context, term);
     println!("{:#?}", term);
 }
 

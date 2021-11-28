@@ -1,7 +1,7 @@
 pub use logos::Logos;
 
-use alloc::borrow::Cow;
 use logos::Lexer;
+use std::borrow::Cow;
 
 /// Token generated during lexing.
 #[derive(Debug, Logos)]
@@ -70,8 +70,6 @@ fn lex_identifier<'a>(lex: &mut Lexer<'a, Token<'a>>) -> Cow<'a, [u8]>
 mod tests
 {
     use super::*;
-
-    use alloc::format;
 
     #[test]
     fn fine()

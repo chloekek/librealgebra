@@ -1,10 +1,7 @@
 //! Lexing and parsing of terms.
 
 #![feature(decl_macro)]
-#![no_std]
 #![warn(missing_docs)]
-
-extern crate alloc;
 
 pub use self::error::*;
 pub use self::lex::*;

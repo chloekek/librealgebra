@@ -1,10 +1,10 @@
-use alloc::rc::Rc;
 use la_term::Term;
 use la_term::lambda::Parameter;
 use la_term::lambda::Strictness;
 use la_term::symbol::Symbol;
 use la_term::symbol::Symbols;
 use la_term::variable::DeBruijn;
+use std::rc::Rc;
 
 macro_rules! parameter
 {

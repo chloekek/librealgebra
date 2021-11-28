@@ -13,8 +13,8 @@ use crate::Term;
 use crate::add;
 use crate::variable::DeBruijnCache;
 
-use core::iter::TrustedLen;
-use core::slice;
+use std::iter::TrustedLen;
+use std::slice;
 
 /// Pointers to the words in the payload of an application term.
 #[allow(missing_docs)]

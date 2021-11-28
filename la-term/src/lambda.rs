@@ -10,7 +10,7 @@ use crate::Payload;
 use crate::Term;
 use crate::symbol::Symbol;
 
-use alloc::rc::Rc;
+use std::rc::Rc;
 
 /// Information about a lambda parameter.
 #[allow(missing_docs)]

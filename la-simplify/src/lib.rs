@@ -4,22 +4,22 @@
 // These symbols are in Pascal case, so we disable this warning.
 #![allow(non_snake_case)]
 
-#![no_std]
 #![warn(missing_docs)]
-
-extern crate alloc;
 
 pub use self::constants::*;
 
 use self::builtins::Builtins;
 
-use core::cell::Cell;
-use hashbrown::HashMap;
 use la_term::Guard;
 use la_term::Term;
 use la_term::View;
 use la_term::symbol::Symbol;
 use la_term::symbol::Symbols;
+use std::cell::Cell;
+use std::collections::HashMap;
+use std::panic::panic_any;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering::SeqCst;
 
 pub mod builtins;
 
@@ -38,12 +38,27 @@ pub struct Context<'a>
     /// Once zero, simplification no longer descends.
     pub recursion_limit: Cell<usize>,
 
+    /// Set to true when the simplifier should stop.
+    /// This will cause the simplifier to panic
+    /// with [`StopRequested`] as the exception.
+    pub stop_requested: &'a AtomicBool,
+
     pub builtins: &'a Builtins,
     pub constants: &'a Constants,
     pub session: &'a Session,
     pub symbols: &'a Symbols,
     pub warner: &'a dyn Warner,
 }
+
+/// Panicked with when [`stop_requested`] is set to true.
+///
+/// Normally when the simplifier encounters an error,
+/// it just emits a warning and returns the unsimplified term.
+/// Using results throughout the simplifier just for facilitating stop requests
+/// is Very Annoying (lots of `Ok`, `?`, `map` etc) so we just panic instead.
+///
+/// [`stop_requested`]: `Context::stop_requested`
+pub struct StopRequested;
 
 /// Per-session state such as global definitions.
 pub struct Session
@@ -91,6 +106,10 @@ pub fn simplify(c: &Context, term: Term) -> Term
     if c.recursion_limit.get() == 0 {
         // TODO: Emit warning about recursion depth reached.
         return term;
+    }
+
+    if c.stop_requested.load(SeqCst) {
+        panic_any(StopRequested);
     }
 
     match term.view() {

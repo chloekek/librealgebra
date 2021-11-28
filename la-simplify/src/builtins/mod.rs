@@ -3,9 +3,9 @@
 use crate::Constants;
 use crate::Context;
 
-use hashbrown::HashMap;
 use la_term::Term;
 use la_term::symbol::Symbol;
+use std::collections::HashMap;
 
 macro_rules! builtins
 {

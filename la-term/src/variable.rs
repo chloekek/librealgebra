@@ -9,11 +9,11 @@ use super::Payload;
 use super::Term;
 use super::View;
 
-use core::ops::Add;
-use core::ops::BitOr;
-use core::ops::BitOrAssign;
-use core::ops::Shr;
-use core::ops::ShrAssign;
+use std::ops::Add;
+use std::ops::BitOr;
+use std::ops::BitOrAssign;
+use std::ops::Shr;
+use std::ops::ShrAssign;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Variable terms

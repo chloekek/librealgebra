@@ -13,15 +13,15 @@ use crate::View;
 use crate::add;
 use crate::variable::DeBruijnCache;
 
-use core::borrow::Borrow;
-use core::cell::RefCell;
-use core::fmt;
-use core::hash::Hash;
-use core::hash::Hasher;
-use core::mem::size_of;
-use core::ptr::copy;
-use core::slice;
-use hashbrown::HashSet;
+use std::borrow::Borrow;
+use std::cell::RefCell;
+use std::collections::HashSet;
+use std::fmt;
+use std::hash::Hash;
+use std::hash::Hasher;
+use std::mem::size_of;
+use std::ptr::copy;
+use std::slice;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Symbol terms

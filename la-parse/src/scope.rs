@@ -1,6 +1,6 @@
-use hashbrown::HashMap;
 use la_term::symbol::Symbol;
 use la_term::variable::DeBruijn;
+use std::collections::HashMap;
 
 /// Mapping from identifiers to De Bruijn indices.
 ///

@@ -1,30 +1,26 @@
 //! Data type for terms.
 
-#![feature(core_intrinsics)]
 #![feature(extern_types)]
+#![feature(hash_set_entry)]
 #![feature(intra_doc_pointers)]
-#![feature(option_result_unwrap_unchecked)]
 #![feature(trusted_len)]
-#![no_std]
 #![warn(missing_docs)]
-
-extern crate alloc;
 
 pub use self::guard::Guard;
 
 use self::object::*;
 use self::variable::DeBruijnCache;
 
-use alloc::alloc::alloc;
-use alloc::alloc::dealloc;
-use alloc::alloc::handle_alloc_error;
-use alloc::rc::Rc;
-use core::alloc::Layout;
-use core::fmt;
-use core::intrinsics::abort;
-use core::mem::align_of;
-use core::mem::size_of;
-use core::ptr::NonNull;
+use std::alloc::Layout;
+use std::alloc::alloc;
+use std::alloc::dealloc;
+use std::alloc::handle_alloc_error;
+use std::fmt;
+use std::mem::align_of;
+use std::mem::size_of;
+use std::process::abort;
+use std::ptr::NonNull;
+use std::rc::Rc;
 
 pub mod application;
 pub mod integer;

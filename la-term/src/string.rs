@@ -12,9 +12,9 @@ use crate::Term;
 use crate::add;
 use crate::variable::DeBruijnCache;
 
-use core::iter::TrustedLen;
-use core::mem::size_of;
-use core::slice;
+use std::iter::TrustedLen;
+use std::mem::size_of;
+use std::slice;
 
 /// Pointers to the words in the payload of a string term.
 #[allow(missing_docs)]
