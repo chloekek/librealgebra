@@ -1,3 +1,4 @@
+use core::cell::Cell;
 use la_parse::Logos;
 use la_parse::Scope;
 use la_parse::Token;
@@ -29,8 +30,8 @@ fn main()
     let mut lexer = Token::lexer(&input).peekable();
     let term = parse_term(&symbols, &scope, &mut lexer).unwrap();
 
-    let context = Context{
-        recursion_limit: 16,
+    let mut context = Context{
+        recursion_limit: Cell::new(16),
         builtins: &builtins,
         constants: &constants,
         session: &session,
@@ -38,7 +39,7 @@ fn main()
         warner: &warner,
     };
 
-    let term = simplify(context, term);
+    let term = simplify(&mut context, term);
     println!("{:#?}", term);
 }
 

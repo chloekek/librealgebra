@@ -23,7 +23,7 @@ macro_rules! builtins
         /// The interface is similar to that of [`simplify_application`].
         ///
         /// [`simplify_application`]: `crate::simplify_application`
-        pub type Builtin = fn(c: Context, arguments: &[Term]) -> Option<Term>;
+        pub type Builtin = fn(c: &Context, arguments: &[Term]) -> Option<Term>;
 
         /// Lookup table for implementations of builtins.
         ///

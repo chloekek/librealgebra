@@ -1,4 +1,8 @@
 /// General-purpose scope guard.
+///
+/// This is in the `la_term` crate for convenience, not because it makes sense.
+/// Hence it is hidden from the documentation.
+#[doc(hidden)]
 pub struct Guard<F>
     where F: FnOnce()
 {

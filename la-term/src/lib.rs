@@ -10,7 +10,8 @@
 
 extern crate alloc;
 
-use self::guard::Guard;
+pub use self::guard::Guard;
+
 use self::object::*;
 use self::variable::DeBruijnCache;
 

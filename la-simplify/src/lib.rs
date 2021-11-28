@@ -13,7 +13,9 @@ pub use self::constants::*;
 
 use self::builtins::Builtins;
 
+use core::cell::Cell;
 use hashbrown::HashMap;
+use la_term::Guard;
 use la_term::Term;
 use la_term::View;
 use la_term::symbol::Symbol;
@@ -29,12 +31,12 @@ mod constants;
 /// See the documentation for the type of each field
 /// to learn more about what they mean.
 #[allow(missing_docs)]
-#[derive(Clone, Copy)]
 pub struct Context<'a>
 {
-    /// Decremented on each call to [`recurse`].
+    /// Decremented on each call to [`recurse`],
+    /// and incremented when the call returns.
     /// Once zero, simplification no longer descends.
-    pub recursion_limit: usize,
+    pub recursion_limit: Cell<usize>,
 
     pub builtins: &'a Builtins,
     pub constants: &'a Constants,
@@ -64,12 +66,19 @@ pub trait Warner
 {
 }
 
-/// Decrement [`recursion_limit`], then call [`simplify`].
+/// Call [`simplify`] with a decremented [`recursion_limit`].
 ///
 /// [`recursion_limit`]: `Context::recursion_limit`
-pub fn recurse(mut c: Context, term: Term) -> Term
+pub fn recurse(c: &Context, term: Term) -> Term
 {
-    c.recursion_limit -= 1;
+    let limit = c.recursion_limit.get();
+    c.recursion_limit.set(limit - 1);
+
+    let _guard = Guard::new(|| {
+        let limit = c.recursion_limit.get();
+        c.recursion_limit.set(limit + 1);
+    });
+
     simplify(c, term)
 }
 
@@ -77,9 +86,9 @@ pub fn recurse(mut c: Context, term: Term) -> Term
 ///
 /// This does not necessarily reduce the term to a “most simple” form.
 /// The exact semantics can be found in the Libre Algebra manual.
-pub fn simplify(c: Context, term: Term) -> Term
+pub fn simplify(c: &Context, term: Term) -> Term
 {
-    if c.recursion_limit == 0 {
+    if c.recursion_limit.get() == 0 {
         // TODO: Emit warning about recursion depth reached.
         return term;
     }
@@ -107,7 +116,7 @@ pub fn simplify(c: Context, term: Term) -> Term
 }
 
 /// Simplify an application term.
-pub fn simplify_application(c: Context, function: &Term, arguments: &[Term])
+pub fn simplify_application(c: &Context, function: &Term, arguments: &[Term])
     -> Option<Term>
 {
     // First simplify the function itself.
@@ -128,7 +137,7 @@ pub fn simplify_application(c: Context, function: &Term, arguments: &[Term])
 }
 
 /// Simplify a symbol term.
-pub fn simplify_symbol(c: Context, symbol: &Symbol) -> Term
+pub fn simplify_symbol(c: &Context, symbol: &Symbol) -> Term
 {
     // Look up the definition of the symbol.
     let definition = c.session.definitions.get(symbol);
