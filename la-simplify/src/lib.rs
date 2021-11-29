@@ -4,6 +4,8 @@
 // These symbols are in Pascal case, so we disable this warning.
 #![allow(non_snake_case)]
 
+#![allow(unused_parens)]
+#![feature(trusted_len)]
 #![warn(missing_docs)]
 
 pub use self::constants::*;
