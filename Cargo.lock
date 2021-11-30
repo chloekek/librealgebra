@@ -77,6 +77,7 @@ name = "la-simplify"
 version = "0.0.0"
 dependencies = [
  "la-term",
+ "smallvec",
 ]
 
 [[package]]
@@ -280,6 +281,11 @@ dependencies = [
  "tempfile",
  "wait-timeout",
 ]
+
+[[package]]
+name = "smallvec"
+version = "1.7.0"
+source = "git+https://github.com/chloekek/rust-smallvec.git?branch=trusted_len#d64e7e764529077f210b2e7065faaf817f84d8b8"
 
 [[package]]
 name = "syn"

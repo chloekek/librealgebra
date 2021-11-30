@@ -5,3 +5,10 @@ edition = "2021"
 
 [dependencies.la-term]
 path = "../la-term"
+
+[dependencies.smallvec]
+features = ["trusted_len", "union"]
+
+# The version on crates.io does not impl TrustedLen.
+git = "https://github.com/chloekek/rust-smallvec.git"
+branch = "trusted_len"

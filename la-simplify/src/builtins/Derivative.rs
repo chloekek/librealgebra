@@ -4,6 +4,7 @@ use crate::recurse;
 use la_term::Term;
 use la_term::View;
 use la_term::variable::DeBruijn;
+use smallvec::SmallVec;
 use std::iter::TrustedLen;
 
 /// Simplify an application of `Derivative`.
@@ -87,7 +88,7 @@ pub fn of_add(c: &Context, parameter: DeBruijn, terms: &[Term]) -> Option<Term>
         .filter(|term| is_constant(parameter, term) == Some(false))
 
         .map(|term| of_term(c, parameter, term.clone()))
-        .collect::<Option<Vec<_>>>()?
+        .collect::<Option<SmallVec<[_; 8]>>>()?
     );
     let result = make_add(c, terms);
     return Some(recurse(c, result));
